@@ -1,0 +1,48 @@
+#net: "../../models/rts/train_rts.prototxt"
+net: "train_rts.prototxt"
+
+# Note: one iteration is one batch which is dependent on batchsize
+# which is set in train_val.prototxt file
+
+# test_iter specifies how many forward passes the test should carry out.
+# test_iter: 39
+test_iter: 10
+
+# do testing every <test_interval> iterations
+# test_initialization: false
+test_interval: 500
+
+# base learning rate
+base_lr: 0.00001
+
+# learning rate policy: drop the learning rate in steps
+# by a factor of <gamma> every <stepsize> iterations
+# type: "Adam"
+lr_policy: "fixed"
+# lr_policy: "step"
+# # type: "AdaGrad"
+gamma: 0.1
+# stepsize: 300000  # drop the learning rate every <stepsize> iterations
+
+# B
+# display every <display> iterations
+display: 20
+
+# maximum number of iterations
+max_iter: 100000
+
+
+momentum: 0.9
+momentum2: 0.999
+delta: 0.00000001
+weight_decay: 0.00003
+
+# take a snapshot every so many 
+snapshot: 10000
+# snapshot_prefix: "../../models/rts/snapshots/rts_train"
+snapshot_prefix: "snapshots/rts24"
+# SOLVER TYPE
+type: "Adam"
+
+# use: GPU or CPU
+solver_mode: GPU
