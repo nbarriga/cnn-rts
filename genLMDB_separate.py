@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python 
 import sys
 sys.path.append("~/git-working/caffe/python/")
 
@@ -13,7 +13,7 @@ start_time = time.time()
 np.random.seed(24)
 
 
-def read_games(channels, dimension, nrGames, path, process_labels):
+def read_games(channels, dimension, nrGames, path, process_labels, startGame=0):
     data = np.zeros((nrGames, channels, dimension, dimension), dtype=np.uint8)
     labels = np.zeros(nrGames, dtype=np.uint8)
 
@@ -21,7 +21,7 @@ def read_games(channels, dimension, nrGames, path, process_labels):
         if i % 5000 == 0:
             print i
 
-        array = np.fromfile(path+str(i), dtype=np.uint8, count=-1, sep=" ")
+        array = np.fromfile(path+str(startGame+i), dtype=np.uint8, count=-1, sep=" ")
         w = array[0]
         h = array[1]
         c = array[2]
@@ -47,24 +47,30 @@ def read_games(channels, dimension, nrGames, path, process_labels):
 
 
 # save_path = '/media/root/EXTERNAL_2GB/'
-def create_lmdb(data, labels, save_path, name, extra, mean):
+def create_lmdb(data, labels, save_path, name, extra, mean, batch, batch_size, delete):
     buffer_size = 100
     DB_KEY_FORMAT = "{:0>10d}"
 
-    map_size = data[0].astype(float).nbytes * 2 * len(labels) + 100
+    #map_size = data[0].astype(float).nbytes * 2 * len(labels) + 100
+    map_size= 1000000000000
+    #print "Map size: "+str(map_size/1000000)+"MB"
     lmdb_name = save_path + name + extra
 
     c = data[0].shape[0]
     h = data[0].shape[1]
     w = data[0].shape[2]
 
+    start_idx=batch*batch_size*8
+    #print "idx: "+str(start_idx)
     try:
-        shutil.rmtree(lmdb_name)
+        if delete:
+            print "deleting lmdb"
+            shutil.rmtree(lmdb_name)
     except:
         print "error deleting"
 
     for idx in range(int(math.ceil(len(labels)/float(buffer_size)))):
-        if idx % 10 == 0:
+        if idx % 50 == 0:
             print idx*buffer_size
         in_db = lmdb.open(lmdb_name, map_size=map_size)
         with in_db.begin(write=True) as in_txn:
@@ -79,7 +85,7 @@ def create_lmdb(data, labels, save_path, name, extra, mean):
                 # datum.data = ((array.astype(float) - mean)*128.0).tobytes()
                 datum.data = array.tobytes()
 
-                str_id = DB_KEY_FORMAT.format(buffer_size*idx + current_idx)
+                str_id = DB_KEY_FORMAT.format(start_idx + buffer_size*idx + current_idx)
                 in_txn.put(str_id, datum.SerializeToString())
         in_db.close()
     return
@@ -119,49 +125,41 @@ def augment(data, labels):
             aug_data[idx*8+7][i] = np.fliplr(aug_data[idx*8+3][i])
     return aug_data, aug_labels
 
-totalGames = 634000
-samples = 12
+testGames = 72304
+trainGames = 634844
+#samples = 12
 meanD = 0
 dim = 24
 dimstr = str(dim)+'x'+str(dim)
 
-d, l = read_games(25, dim, totalGames, '../microrts/'+dimstr+'extracted/game', 0)
+#d, l = read_games(25, dim, testGames, '../microrts/'+dimstr+'extractedTest/game', 0)
 
-ds, ls = shuffle_s(d, l, samples)
+#dtst, ltst = shuffle(d, l)
 
-#uncomment this to use only part of the total games
-#totalGames = 36000
-
-test_start = int(totalGames * 0.9)
-
-dtst = ds[test_start:totalGames]
-ltst = ls[test_start:totalGames]
 
 print("test: %s seconds ---" % (time.time() - start_time))
-create_lmdb(dtst, ltst, './data/', 'test', dimstr, meanD)
+#create_lmdb(dtst, ltst, './data/', 'test', dimstr, meanD)
 
-d = ds[0:test_start]
-l = ls[0:test_start]
+batch = 50000
+startGame = 0
+delete = True;
+i = 0
+while startGame+batch<trainGames+batch:
+    #print "batch: "+str(batch if startGame+batch<=trainGames else trainGames-startGame)
+    d, l = read_games(25, dim, batch if startGame+batch<=trainGames else trainGames-startGame, '../microrts/'+dimstr+'extracted/game', 0, startGame)
 
-print("augmenting: %s seconds ---" % (time.time() - start_time))
-dsa, lsa = augment(d, l)
-print("shuffling: %s seconds ---" % (time.time() - start_time))
-d2, l2 = shuffle(dsa, lsa)
+    ds, ls = shuffle(d, l)
 
-# meanD = np.mean(d, axis=(0), dtype=np.float64)
-
-
-# d = d.astype(float)
-# d = (d - meanD)*128.0
-# dtst = (dtst - meanD)*128.0
-# m = np.amax(d)
-
-print("train: %s seconds ---" % (time.time() - start_time))
-create_lmdb(d2, l2, './data/', 'train', dimstr, meanD)
+    print("augmenting: %s seconds ---" % (time.time() - start_time))
+    dsa, lsa = augment(ds, ls)
+    print("shuffling: %s seconds ---" % (time.time() - start_time))
+    d2, l2 = shuffle(dsa, lsa)
 
 
-
-# meanX = np.mean(X, axis=(0), dtype=np.float64)
-# devX = np.std(X, axis=(0), dtype=np.float64) + 0.00000000001
-
-print("--- %s seconds ---" % (time.time() - start_time))
+    print("lmdb: %s seconds ---" % (time.time() - start_time))
+    create_lmdb(d2, l2, './data/', 'train', dimstr, meanD, i, batch, delete)
+    delete = False
+    startGame+=batch
+    i+=1
+    print("done: %s seconds ---" % (time.time() - start_time))
+    print "progress: "+str(batch*i)+"/"+str(trainGames)+" samples"

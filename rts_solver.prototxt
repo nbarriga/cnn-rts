@@ -10,7 +10,7 @@ test_iter: 10
 
 # do testing every <test_interval> iterations
 # test_initialization: false
-test_interval: 500
+test_interval: 2000
 
 # base learning rate
 base_lr: 0.00001
@@ -26,10 +26,10 @@ gamma: 0.1
 
 # B
 # display every <display> iterations
-display: 20
+display: 2000
 
 # maximum number of iterations
-max_iter: 100000
+max_iter: 1000000
 
 
 momentum: 0.9
@@ -40,7 +40,7 @@ weight_decay: 0.00003
 # take a snapshot every so many 
 snapshot: 10000
 # snapshot_prefix: "../../models/rts/snapshots/rts_train"
-snapshot_prefix: "snapshots/rts24"
+snapshot_prefix: "snapshots/24-0.1-634844"
 # SOLVER TYPE
 type: "Adam"
 
