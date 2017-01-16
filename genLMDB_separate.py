@@ -18,7 +18,7 @@ def read_games(channels, dimension, nrGames, path, process_labels, startGame=0):
     labels = np.zeros(nrGames, dtype=np.uint8)
 
     for i in range(nrGames):
-        if i % 5000 == 0:
+        if i % 1000 == 0:
             print i
 
         array = np.fromfile(path+str(startGame+i), dtype=np.uint8, count=-1, sep=" ")
@@ -70,7 +70,7 @@ def create_lmdb(data, labels, save_path, name, extra, mean, batch, batch_size, d
         print "error deleting"
 
     for idx in range(int(math.ceil(len(labels)/float(buffer_size)))):
-        if idx % 50 == 0:
+        if idx % 10 == 0:
             print idx*buffer_size
         in_db = lmdb.open(lmdb_name, map_size=map_size)
         with in_db.begin(write=True) as in_txn:
@@ -125,28 +125,29 @@ def augment(data, labels):
             aug_data[idx*8+7][i] = np.fliplr(aug_data[idx*8+3][i])
     return aug_data, aug_labels
 
-testGames = 72304
-trainGames = 634844
+testGames = 3024
+trainGames = 26400
 #samples = 12
 meanD = 0
-dim = 24
+dim = 128
 dimstr = str(dim)+'x'+str(dim)
 
-#d, l = read_games(25, dim, testGames, '../microrts/'+dimstr+'extractedTest/game', 0)
+#d, l = read_games(25, dim, testGames, '../cnn-data/'+dimstr+'extractedTest/game', 0, 0)
 
 #dtst, ltst = shuffle(d, l)
 
 
-print("test: %s seconds ---" % (time.time() - start_time))
-#create_lmdb(dtst, ltst, './data/', 'test', dimstr, meanD)
+#print("test: %s seconds ---" % (time.time() - start_time))
+#create_lmdb(dtst, ltst, './data/', 'test', dimstr, meanD, 0, testGames, True)
+#print("test done: %s seconds ---" % (time.time() - start_time))
 
-batch = 50000
+batch = 2000
 startGame = 0
 delete = True;
 i = 0
 while startGame+batch<trainGames+batch:
     #print "batch: "+str(batch if startGame+batch<=trainGames else trainGames-startGame)
-    d, l = read_games(25, dim, batch if startGame+batch<=trainGames else trainGames-startGame, '../microrts/'+dimstr+'extracted/game', 0, startGame)
+    d, l = read_games(25, dim, batch if startGame+batch<=trainGames else trainGames-startGame, '../cnn-data/'+dimstr+'extracted/game', 0, startGame)
 
     ds, ls = shuffle(d, l)
 

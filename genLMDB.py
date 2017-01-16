@@ -119,13 +119,13 @@ def augment(data, labels):
             aug_data[idx*8+7][i] = np.fliplr(aug_data[idx*8+3][i])
     return aug_data, aug_labels
 
-totalGames = 634000
+totalGames = 8928
 samples = 12
 meanD = 0
-dim = 24
+dim = 64
 dimstr = str(dim)+'x'+str(dim)
 
-d, l = read_games(25, dim, totalGames, '../microrts/'+dimstr+'extracted/game', 0)
+d, l = read_games(25, dim, totalGames, '../cnn-data/'+dimstr+'extracted/game', 0)
 
 ds, ls = shuffle_s(d, l, samples)
 
