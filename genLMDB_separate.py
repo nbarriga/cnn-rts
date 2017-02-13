@@ -8,43 +8,80 @@ import caffe
 import time
 import math
 import shutil
+import h5py
 
 start_time = time.time()
-np.random.seed(24)
+#np.random.seed(24)
 
-
-def read_games(channels, dimension, nrGames, path, process_labels, startGame=0):
+def read_games(channels, dimension, nrGames, path, process_labels, startGame=0, datatype):
     data = np.zeros((nrGames, channels, dimension, dimension), dtype=np.uint8)
-    labels = np.zeros(nrGames, dtype=np.uint8)
+    #labels = np.zeros(nrGames, dtype=np.uint8)
+    labels = np.zeros(nrGames, dtype=datatype)
 
     for i in range(nrGames):
         if i % 1000 == 0:
             print i
 
-        array = np.fromfile(path+str(startGame+i), dtype=np.uint8, count=-1, sep=" ")
+        #array = np.fromfile(path+str(startGame+i), dtype=np.uint8, count=-1, sep=" ")
+        array = np.fromfile(path+str(startGame+i), dtype=np.uint8, count=(3+channels*dimension*dimension), sep=" ")
         w = array[0]
         h = array[1]
         c = array[2]
 
         assert w == h and w == dimension and c == channels
 
-        labels[i] = array[-1]
+        f = open(path+str(startGame+i),'r')
+        f.seek(-40,2)
+        labels[i]=(float(f.readlines()[-1])+1)/2.0
+        #labels[i] = array[-1]
 
-        if process_labels:
-            t = int(labels[i])/25
-            if t == 2:
-                labels[i] = 2  # draw
-            elif t < 2:
-                labels[i] = 0  # defeat
-            else:
-                labels[i] = 1  # victory
+#        if process_labels:
+#            t = int(labels[i])/channels
+#            if t == 2:
+#                labels[i] = 2  # draw
+#            elif t < 2:
+#                labels[i] = 0  # defeat
+#            else:
+#                labels[i] = 1  # victory
 
-        array = np.delete(array, array.size-1)
+        #array = np.delete(array, array.size-1)
         array = np.delete(array, [0, 1, 2])
         # print array.size
         data[i] = np.reshape(array, [c, w, h])
     return data, labels
 
+def create_db(data, labels, save_path, name, extra, mean, batch, batch_size, delete, backend):
+    if backend == lmdb:
+        create_lmdb(data, labels, save_path, name, extra, mean, batch, batch_size, delete)
+    elif backend == hdf5:
+        create_hdf5(data, labels, save_path, name, extra, mean, batch, batch_size, delete)
+    else:
+        print "Error: backend "+backend+" not supported."
+        sys.exit()
+
+def create_hdf5(data, labels, save_path, name, extra, mean, batch, batch_size, delete):
+
+    listname = save_path + name + extra + '_list.txt'
+    dbname = save_path + name + extra + '_' + str(batch) + '.h5'
+
+    print "deleting hdf5"
+    try:
+        os.remove(dbname)
+    except:
+        print "error deleting db "+str(batch)
+    if delete:
+        try:
+            os.remove(listname)
+        except:
+            print "error deleting db list"
+
+    with h5py.File(dbname,'w') as H:
+        H.create_dataset( 'data', data=data ) # note the name X given to the dataset!
+        H.create_dataset( 'label', data=labels ) # note the name y given to the dataset!
+    with open(listname,'a') as L:
+        L.write( dbname+'\n' ) # list all h5 files you are going to use
+
+    return
 
 # save_path = '/media/root/EXTERNAL_2GB/'
 def create_lmdb(data, labels, save_path, name, extra, mean, batch, batch_size, delete):
@@ -107,10 +144,10 @@ def shuffle_s(data, labels, samples):
     return data[pp], labels[pp]
 
 
-def augment(data, labels):
+def augment(data, labels, datatype):
 
     aug_data = np.zeros((len(labels)*8, data[0].shape[0], data[0].shape[1], data[0].shape[2]), dtype=np.uint8)
-    aug_labels = np.zeros((len(labels)*8), dtype=np.uint8)
+    aug_labels = np.zeros((len(labels)*8), dtype=datatype)
 
     for idx, array in enumerate(data):
         aug_labels[idx*8:(idx+1)*8] = labels[idx]
@@ -125,42 +162,122 @@ def augment(data, labels):
             aug_data[idx*8+7][i] = np.fliplr(aug_data[idx*8+3][i])
     return aug_data, aug_labels
 
-testGames = 3024
-trainGames = 26400
+#testGames = 3024
+#trainGames = 26400
 #samples = 12
 meanD = 0
-dim = 128
+#dim = 128
+#dimstr = str(dim)+'x'+str(dim)
+
+dim = int(sys.argv[1])
 dimstr = str(dim)+'x'+str(dim)
+planes = int(sys.argv[2])
+trainDirectory = sys.argv[3]
+testDirectory = sys.argv[4]
+outDirectory = sys.argv[5]
 
-#d, l = read_games(25, dim, testGames, '../cnn-data/'+dimstr+'extractedTest/game', 0, 0)
+batch = int(sys.argv[6])
+backend = sys.argv[7]
+if sys.argv[8]==float:
+    datatype = np.float32
+elif sys.argv[8]==int:
+    datatype = np.uint8
+else:
+    print "Error: unsupport data type: "+datatype
+    sys.exit()
 
-#dtst, ltst = shuffle(d, l)
+if backend == lmdb and datatype==np.uint8:
+    print "Error: LMDB doesn't support "+datatype
+    sys.exit()
 
 
-#print("test: %s seconds ---" % (time.time() - start_time))
-#create_lmdb(dtst, ltst, './data/', 'test', dimstr, meanD, 0, testGames, True)
-#print("test done: %s seconds ---" % (time.time() - start_time))
+import fnmatch
+import os
 
-batch = 2000
+trainGames = len(fnmatch.filter(os.listdir(trainDirectory), 'game*'))
+testGames = len(fnmatch.filter(os.listdir(testDirectory), 'game*'))
+
+print("Reading "+str(testGames)+" test games")
+d, l = read_games(planes, dim, testGames, testDirectory+'/game', 0, 0, datatype)
+print("Reading done: %s seconds ---" % (time.time() - start_time))
+
+print("Shuffling games")
+dtst, ltst = shuffle(d, l)
+d=[]
+l=[]
+print("Shuffling done: %s seconds ---" % (time.time() - start_time))
+
+print("Creating test DB")
+create_db(dtst, ltst, outDirectory, '/test', dimstr, meanD, 0, testGames, True, backend)
+dtst = []
+ltst = []
+print("LMDB done: %s seconds ---" % (time.time() - start_time))
+
+#batch = 2000
 startGame = 0
 delete = True;
 i = 0
-while startGame+batch<trainGames+batch:
-    #print "batch: "+str(batch if startGame+batch<=trainGames else trainGames-startGame)
-    d, l = read_games(25, dim, batch if startGame+batch<=trainGames else trainGames-startGame, '../cnn-data/'+dimstr+'extracted/game', 0, startGame)
+if batch > 0:
+    while startGame+batch<trainGames+batch:
+        print("Reading "+str(batch if startGame+batch<=trainGames else trainGames-startGame)+" training games")
+        d, l = read_games(planes, dim, batch if startGame+batch<=trainGames else trainGames-startGame, trainDirectory+'/game', 0, startGame, datatype)
+        print("Reading done: %s seconds ---" % (time.time() - start_time))
 
+        print("Shuffling games")
+        ds, ls = shuffle(d, l)
+        d = []
+        l = []
+        print("Shuffling done: %s seconds ---" % (time.time() - start_time))
+
+        print("Augmenting games")
+        dsa, lsa = augment(ds, ls, datatype)
+        ds = []
+        ls = []
+        print("Augmenting done: %s seconds ---" % (time.time() - start_time))
+        
+        print("Shuffling games")
+        d2, l2 = shuffle(dsa, lsa)
+        dsa = []
+        lsa = []
+        print("Shuffling done: %s seconds ---" % (time.time() - start_time))
+
+
+        print("Creating training LMDB")
+        create_db(d2, l2, outDirectory, '/train', dimstr, meanD, i, batch, delete, backend)
+        d2 = []
+        l2 = []
+        print("LMDB done: %s seconds ---" % (time.time() - start_time))
+        delete = False
+        startGame+=batch
+        i+=1
+        print "progress: "+str(batch*i)+"/"+str(trainGames)+" samples"
+else:
+    print("Reading "+str(trainGames)+" training games")
+    d, l = read_games(planes, dim, trainGames, trainDirectory+'/game', 0, 0, datatype)
+    print("Reading done: %s seconds ---" % (time.time() - start_time))
+
+    print("Shuffling games")
     ds, ls = shuffle(d, l)
+    d = []
+    l = []
+    print("Shuffling done: %s seconds ---" % (time.time() - start_time))
 
-    print("augmenting: %s seconds ---" % (time.time() - start_time))
-    dsa, lsa = augment(ds, ls)
-    print("shuffling: %s seconds ---" % (time.time() - start_time))
+    print("Augmenting games")
+    dsa, lsa = augment(ds, ls, datatype)
+    ds = []
+    ls = []
+    print("Augmenting done: %s seconds ---" % (time.time() - start_time))
+        
+    print("Shuffling games")
     d2, l2 = shuffle(dsa, lsa)
+    dsa = []
+    lsa = []
+    print("Shuffling done: %s seconds ---" % (time.time() - start_time))
 
 
-    print("lmdb: %s seconds ---" % (time.time() - start_time))
-    create_lmdb(d2, l2, './data/', 'train', dimstr, meanD, i, batch, delete)
-    delete = False
-    startGame+=batch
-    i+=1
-    print("done: %s seconds ---" % (time.time() - start_time))
-    print "progress: "+str(batch*i)+"/"+str(trainGames)+" samples"
+    print("Creating training DB")
+    create_db(d2, l2, outDirectory, '/train', dimstr, meanD, 0, trainGames, True, backend)
+    d2 = []
+    l2 = []
+    print("LMDB done: %s seconds ---" % (time.time() - start_time))
+
