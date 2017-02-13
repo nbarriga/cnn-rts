@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.legend as lgd
 import matplotlib.markers as mks
 
+
 def get_log_parsing_script():
     dirname = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
     return dirname + '/parse_log.sh'
@@ -70,8 +71,8 @@ def get_field_descriptions(chart_type):
     x_axis_field = description[1]
     return x_axis_field, y_axis_field    
 
-def get_field_indecies(x_axis_field, y_axis_field):    
-    data_file_type = get_data_file_type(chart_type)
+def get_field_indecies(x_axis_field, y_axis_field, cht):
+    data_file_type = get_data_file_type(cht)
     fields = create_field_index()[0][data_file_type]
     return fields[x_axis_field], fields[y_axis_field]
 
@@ -99,7 +100,7 @@ def get_data_label(path_to_log):
 
 def get_legend_loc(chart_type):
     x_axis, y_axis = get_field_descriptions(chart_type)
-    loc = 'lower right'
+    loc = 'lower left'
     if y_axis.find('accuracy') != -1:
         pass
     if y_axis.find('loss') != -1 or y_axis.find('learning rate') != -1:
@@ -109,20 +110,33 @@ def get_legend_loc(chart_type):
 def plot_chart(chart_type, path_to_png, path_to_log_list):
     for path_to_log in path_to_log_list:
         os.system('%s %s' % (get_log_parsing_script(), path_to_log))
-        data_file = get_data_file(chart_type, path_to_log)
-        x_axis_field, y_axis_field = get_field_descriptions(chart_type)
-        x, y = get_field_indecies(x_axis_field, y_axis_field)
-        data = load_data(data_file, x, y)
+        data_file1 = get_data_file(6, path_to_log)
+        data_file2 = get_data_file(2, path_to_log)
+
+        x_axis_field, y_axis_field = get_field_descriptions(6)
+        x_axis_field2, y_axis_field2 = get_field_descriptions(2)
+
+        x, y = get_field_indecies(x_axis_field, y_axis_field, 6)
+
+        # chart_type = 2
+        xx, yy = get_field_indecies(x_axis_field2, y_axis_field2, 2)
+
+        data1 = load_data(data_file1, x, y)
+        data2 = load_data(data_file2, xx, yy)
+
         ## TODO: more systematic color cycle for lines
-        color = [random.random(), random.random(), random.random()]
+        # color = [random.random(), random.random(), random.random()]
+        color = 'blue'
         label = get_data_label(path_to_log)
         linewidth = 0.75
         ## If there too many datapoints, do not use marker.
-##        use_marker = False
-        use_marker = True
+        use_marker = False
+#         use_marker = True
         if not use_marker:
-            plt.plot(data[0], data[1], label = label, color = color,
+            plt.plot(data1[0], data1[1], label = 'Train', color = color,
                      linewidth = linewidth)
+            plt.plot(data2[0], data2[1], label = 'Test', color = 'red',
+                     linewidth = 1)
         else:
             ok = False
             ## Some markers throw ValueError: Unrecognized marker style
@@ -136,11 +150,11 @@ def plot_chart(chart_type, path_to_png, path_to_log_list):
                     pass
     legend_loc = get_legend_loc(chart_type)
     plt.legend(loc = legend_loc, ncol = 1) # ajust ncol to fit the space
-    plt.title(get_chart_type_description(chart_type))
-    plt.xlabel(x_axis_field)
-    plt.ylabel(y_axis_field)  
-    #if(chart_type==2 or chart_type==3):
-    #    plt.ylim((0,0.7))
+    plt.title('Train & Test loss vs. Iters')
+    plt.xlabel('ITERATIONS')
+    plt.ylabel('LOSS')
+    plt.grid(True)
+    plt.ylim((0,0.5))
     plt.savefig(path_to_png)     
     plt.show()
 
