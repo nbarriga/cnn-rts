@@ -1,32 +1,31 @@
-#net: "../../models/rts/train_rts.prototxt"
 net: "train_rts.prototxt"
 
 # Note: one iteration is one batch which is dependent on batchsize
 # which is set in train_val.prototxt file
 
 # test_iter specifies how many forward passes the test should carry out.
-# test_iter: 39
-test_iter: 10
+# batch_size * test_iter = number of test samples
+test_iter: 11
 
 # do testing every <test_interval> iterations
 # test_initialization: false
-test_interval: 2000
+test_interval: 100
 
 # base learning rate
-base_lr: 0.00001
+base_lr: 1e-4
 
 # learning rate policy: drop the learning rate in steps
 # by a factor of <gamma> every <stepsize> iterations
-# type: "Adam"
+#type: "Adam"
 lr_policy: "fixed"
-# lr_policy: "step"
+#lr_policy: "step"
 # # type: "AdaGrad"
-gamma: 0.1
-# stepsize: 300000  # drop the learning rate every <stepsize> iterations
+#gamma: 0.1
+#stepsize: 300000  # drop the learning rate every <stepsize> iterations
 
 # B
 # display every <display> iterations
-display: 2000
+display: 20
 
 # maximum number of iterations
 max_iter: 1000000
@@ -35,12 +34,11 @@ max_iter: 1000000
 momentum: 0.9
 momentum2: 0.999
 delta: 0.00000001
-weight_decay: 0.00003
+#weight_decay: 0.00003
 
 # take a snapshot every so many 
-snapshot: 10000
-# snapshot_prefix: "../../models/rts/snapshots/rts_train"
-snapshot_prefix: "snapshots/24-0.1-634844"
+snapshot: 5000
+snapshot_prefix: "snapshots/128x128new-dropB"
 # SOLVER TYPE
 type: "Adam"
 
