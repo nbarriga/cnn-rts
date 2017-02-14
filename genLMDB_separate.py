@@ -13,7 +13,7 @@ import h5py
 start_time = time.time()
 #np.random.seed(24)
 
-def read_games(channels, dimension, nrGames, path, process_labels, startGame=0, datatype):
+def read_games(channels, dimension, nrGames, path, process_labels, startGame, datatype):
     data = np.zeros((nrGames, channels, dimension, dimension), dtype=np.uint8)
     #labels = np.zeros(nrGames, dtype=np.uint8)
     labels = np.zeros(nrGames, dtype=datatype)
@@ -51,9 +51,9 @@ def read_games(channels, dimension, nrGames, path, process_labels, startGame=0, 
     return data, labels
 
 def create_db(data, labels, save_path, name, extra, mean, batch, batch_size, delete, backend):
-    if backend == lmdb:
+    if backend == "lmdb":
         create_lmdb(data, labels, save_path, name, extra, mean, batch, batch_size, delete)
-    elif backend == hdf5:
+    elif backend == "hdf5":
         create_hdf5(data, labels, save_path, name, extra, mean, batch, batch_size, delete)
     else:
         print "Error: backend "+backend+" not supported."
@@ -178,15 +178,15 @@ outDirectory = sys.argv[5]
 
 batch = int(sys.argv[6])
 backend = sys.argv[7]
-if sys.argv[8]==float:
+if sys.argv[8]=="float":
     datatype = np.float32
-elif sys.argv[8]==int:
+elif sys.argv[8]=="int":
     datatype = np.uint8
 else:
     print "Error: unsupport data type: "+datatype
     sys.exit()
 
-if backend == lmdb and datatype==np.uint8:
+if backend == "lmdb" and datatype==np.float32:
     print "Error: LMDB doesn't support "+datatype
     sys.exit()
 
