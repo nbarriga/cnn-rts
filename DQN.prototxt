@@ -1,0 +1,509 @@
+layer {
+  name: "input"
+  type: "Input"
+  top: "data"
+  top: "reward"
+  top: "filter"
+  input_param { 
+	shape { dim: 1 dim: 25 dim: 8 dim: 8 } 
+  	shape { dim: 1 dim: 4 dim: 1 dim: 1 } 
+  	shape { dim: 1 dim: 4 dim: 1 dim: 1 } 
+  }
+}
+layer {
+  name: "echofilter"
+  type: "Split"
+  bottom: "filter"
+  top: "filter2"
+}
+layer {
+  name: "echoreward"
+  type: "Split"
+  bottom: "reward"
+  top: "reward2"
+}
+#layer {
+#  name: "state"
+#  type: "MemoryData"
+#  top: "data"
+#  top: "dummy1"
+#  memory_data_param {
+#    batch_size: 32
+#    channels: 25
+#    height: 8
+#    width: 8
+#  }
+#}
+#layer {
+#  name: "reward"
+#  type: "MemoryData"
+#  top: "reward"
+#  top: "dummy2"
+#  memory_data_param {
+#    batch_size: 32
+#    channels: 4
+#    height: 1
+#    width: 1
+#  }
+#}
+#layer {
+#  name: "filter"
+#  type: "MemoryData"
+#  top: "filter"
+#  top: "dummy3"
+#  memory_data_param {
+#    batch_size: 32
+#    channels: 4
+#    height: 1
+#    width: 1
+#  }
+#}
+#layer {
+#  name: "silence_layer"
+#  type: "Silence"
+#  bottom: "dummy1"
+#  bottom: "dummy2"
+#  bottom: "dummy3"
+#}
+#----------------- conv 1 ------------------
+layer {
+  name: "conv1"
+  type: "Convolution"
+  bottom: "data"
+  top: "conv1"
+  # learning rate & decay multipliers for the filters
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  # learning rate & decay multipliers for the biases
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 32
+    kernel_size: 2
+    pad: 1
+    stride: 1
+    weight_filler {
+      # type: "gaussian"
+      # std: 0.01
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "relu1"
+  type: "ReLU"
+  bottom: "conv1"
+  top: "conv1"
+  relu_param {
+    negative_slope: 0.1818
+  }
+}
+layer {
+  name: "drop1"
+  type: "Dropout"
+  bottom: "conv1"
+  top: "conv1"
+  dropout_param {
+    dropout_ratio: 0.2
+  }
+}
+#----------------- conv 2 ------------------
+layer {
+  name: "conv2"
+  type: "Convolution"
+  bottom: "conv1"
+  top: "conv2"
+  # learning rate & decay multipliers for the filters
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  # learning rate & decay multipliers for the biases
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 32
+    kernel_size: 3
+    pad: 0
+    stride: 2
+    weight_filler {
+      # type: "gaussian"
+      # std: 0.01
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "relu2"
+  type: "ReLU"
+  bottom: "conv2"
+  top: "conv2"
+  relu_param {
+    negative_slope: 0.1818
+  }
+}
+layer {
+  name: "drop2"
+  type: "Dropout"
+  bottom: "conv2"
+  top: "conv2"
+  dropout_param {
+    dropout_ratio: 0.2
+  }
+}
+#----------------- conv 3 ------------------
+layer {
+  name: "conv3"
+  type: "Convolution"
+  bottom: "conv2"
+  top: "conv3"
+  # learning rate & decay multipliers for the filters
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  # learning rate & decay multipliers for the biases
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 48
+    kernel_size: 2
+    pad: 1
+    stride: 1
+    weight_filler {
+      # type: "gaussian"
+      # std: 0.01
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "relu3"
+  type: "ReLU"
+  bottom: "conv3"
+  top: "conv3"
+  relu_param {
+    negative_slope: 0.1818
+  }
+}
+layer {
+  name: "drop3"
+  type: "Dropout"
+  bottom: "conv3"
+  top: "conv3"
+  dropout_param {
+    dropout_ratio: 0.2
+  }
+}
+#----------------- conv 4 ------------------
+layer {
+  name: "conv4"
+  type: "Convolution"
+  bottom: "conv3"
+  top: "conv4"
+  # learning rate & decay multipliers for the filters
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  # learning rate & decay multipliers for the biases
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 48
+    kernel_size: 3
+    pad: 0
+    stride: 2
+    weight_filler {
+      # type: "gaussian"
+      # std: 0.01
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "relu4"
+  type: "ReLU"
+  bottom: "conv4"
+  top: "conv4"
+  relu_param {
+    negative_slope: 0.1818
+  }
+}
+layer {
+  name: "drop4"
+  type: "Dropout"
+  bottom: "conv4"
+  top: "conv4"
+  dropout_param {
+    dropout_ratio: 0.2
+  }
+}
+#----------------- conv 5 ------------------
+layer {
+  name: "conv5"
+  type: "Convolution"
+  bottom: "conv4"
+  top: "conv5"
+  # learning rate & decay multipliers for the filters
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  # learning rate & decay multipliers for the biases
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 2
+    pad: 1
+    stride: 1
+    weight_filler {
+      # type: "gaussian"
+      # std: 0.01
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "relu5"
+  type: "ReLU"
+  bottom: "conv5"
+  top: "conv5"
+  relu_param {
+    negative_slope: 0.1818
+  }
+}
+layer {
+  name: "drop5"
+  type: "Dropout"
+  bottom: "conv5"
+  top: "conv5"
+  dropout_param {
+    dropout_ratio: 0.2
+  }
+}
+#----------------- conv 6 ------------------
+layer {
+  name: "conv6"
+  type: "Convolution"
+  bottom: "conv5"
+  top: "conv6"
+  # learning rate & decay multipliers for the filters
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  # learning rate & decay multipliers for the biases
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 3
+    pad: 0
+    stride: 2
+    weight_filler {
+      # type: "gaussian"
+      # std: 0.01
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "relu6"
+  type: "ReLU"
+  bottom: "conv6"
+  top: "conv6"
+  relu_param {
+    negative_slope: 0.1818
+  }
+}
+layer {
+  name: "drop6"
+  type: "Dropout"
+  bottom: "conv6"
+  top: "conv6"
+  dropout_param {
+    dropout_ratio: 0.2
+  }
+}
+#----------------- conv 7 ------------------
+layer {
+  name: "conv7"
+  type: "Convolution"
+  bottom: "conv6"
+  top: "conv7"
+  # learning rate & decay multipliers for the filters
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  # learning rate & decay multipliers for the biases
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 1
+    pad: 1
+    stride: 1
+    weight_filler {
+      # type: "gaussian"
+      # std: 0.01
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "relu7"
+  type: "ReLU"
+  bottom: "conv7"
+  top: "conv7"
+  relu_param {
+    negative_slope: 0.1818
+  }
+}
+#----------------- conv 8 ------------------
+layer {
+  name: "conv8"
+  type: "Convolution"
+  bottom: "conv7"
+  top: "conv8"
+  # learning rate & decay multipliers for the filters
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  # learning rate & decay multipliers for the biases
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    # One output per class. Or 1 for regression.
+    num_output: 4
+    kernel_size: 1
+    pad: 1
+    stride: 1
+    weight_filler {
+      # type: "gaussian"
+      # std: 0.01
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "relu8"
+  type: "ReLU"
+  bottom: "conv8"
+  top: "conv8"
+#  relu_param {
+#    negative_slope: 0.1818
+#  }
+}
+#----------------- score ------------------
+layer {
+  name: "pool"
+  type: "Pooling"
+  bottom: "conv8"
+  top: "q_values"
+  pooling_param {
+    pool: AVE
+    global_pooling: true
+  }
+}
+
+#----------------- OUTCOME ------------------
+#layer {
+#  name: "accuracy"
+#  type: "Accuracy"
+#  bottom: "score"
+#  bottom: "label"
+#  top: "accuracy"
+#  accuracy_param {
+#    top_k: 1
+#  }
+#  # include {
+#  #   phase: TEST
+#  # }
+#}
+layer {
+  name: "eltwise_layer"
+  type: "Eltwise"
+  bottom: "q_values"
+  bottom: "filter"
+  top: "filtered_q_values"
+  eltwise_param {
+    operation: PROD
+  }
+   include {
+     phase: TRAIN
+   }
+}
+# For regression
+ layer {
+   name: "loss"
+   type: "EuclideanLoss"
+   bottom: "filtered_q_values"
+   bottom: "reward"
+   top: "loss"
+   include {
+     phase: TRAIN
+   }
+ }
+
+# For classification.
+#layer {
+#  name: "loss"
+#  type: "SoftmaxWithLoss"
+#  bottom: "score"
+#  bottom: "label"
+#  top: "loss"
+#}
