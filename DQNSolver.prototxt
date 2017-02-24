@@ -2,16 +2,30 @@ net: "DQN.prototxt"
 
 test_iter: 30
 
-test_interval: 500
-base_lr: 1e-4
-lr_policy: "fixed"
+test_interval: 5000
 display: 100
 
+
 max_iter: 1000000
-momentum: 0.9
-momentum2: 0.999
-delta: 0.00000001
+
+#momentum: 0.9
+#momentum2: 0.999
+#delta: 0.00000001
+#type: "Adam"
+#solver_mode: GPU
+
 snapshot: 5000
 snapshot_prefix: "snapshots/8x8"
-type: "Adam"
+
+# The base learning rate, momentum and the weight decay of the network.
+lr_policy: "step"
+gamma:0.9
+stepsize:1000
+base_lr: 0.00025
+momentum: 0.0
+#weight_decay: 0.05
+delta: 0.01
+# solver mode: CPU or GPU
 solver_mode: GPU
+type: "RMSProp"
+rms_decay: 0.95

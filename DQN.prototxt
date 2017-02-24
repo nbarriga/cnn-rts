@@ -5,23 +5,23 @@ layer {
   top: "reward"
   top: "filter"
   input_param { 
-	shape { dim: 1 dim: 25 dim: 8 dim: 8 } 
-  	shape { dim: 1 dim: 4 dim: 1 dim: 1 } 
-  	shape { dim: 1 dim: 4 dim: 1 dim: 1 } 
+	shape { dim: 256 dim: 25 dim: 24 dim: 24 } 
+  	shape { dim: 256 dim: 4 dim: 1 dim: 1 } 
+  	shape { dim: 256 dim: 4 dim: 1 dim: 1 } 
   }
 }
-layer {
-  name: "echofilter"
-  type: "Split"
-  bottom: "filter"
-  top: "filter2"
-}
-layer {
-  name: "echoreward"
-  type: "Split"
-  bottom: "reward"
-  top: "reward2"
-}
+#layer {
+#  name: "echofilter"
+#  type: "Split"
+#  bottom: "filter"
+#  top: "filter2"
+#}
+#layer {
+#  name: "echoreward"
+#  type: "Split"
+#  bottom: "reward"
+#  top: "reward2"
+#}
 #layer {
 #  name: "state"
 #  type: "MemoryData"
@@ -78,7 +78,7 @@ layer {
   }
   # learning rate & decay multipliers for the biases
   param {
-    lr_mult: 2
+    lr_mult: 1
     decay_mult: 0
   }
   convolution_param {
@@ -128,7 +128,7 @@ layer {
   }
   # learning rate & decay multipliers for the biases
   param {
-    lr_mult: 2
+    lr_mult: 1
     decay_mult: 0
   }
   convolution_param {
@@ -178,7 +178,7 @@ layer {
   }
   # learning rate & decay multipliers for the biases
   param {
-    lr_mult: 2
+    lr_mult: 1
     decay_mult: 0
   }
   convolution_param {
@@ -228,7 +228,7 @@ layer {
   }
   # learning rate & decay multipliers for the biases
   param {
-    lr_mult: 2
+    lr_mult: 1
     decay_mult: 0
   }
   convolution_param {
@@ -278,7 +278,7 @@ layer {
   }
   # learning rate & decay multipliers for the biases
   param {
-    lr_mult: 2
+    lr_mult: 1
     decay_mult: 0
   }
   convolution_param {
@@ -328,7 +328,7 @@ layer {
   }
   # learning rate & decay multipliers for the biases
   param {
-    lr_mult: 2
+    lr_mult: 1
     decay_mult: 0
   }
   convolution_param {
@@ -378,7 +378,7 @@ layer {
   }
   # learning rate & decay multipliers for the biases
   param {
-    lr_mult: 2
+    lr_mult: 1
     decay_mult: 0
   }
   convolution_param {
@@ -408,10 +408,10 @@ layer {
 }
 #----------------- conv 8 ------------------
 layer {
-  name: "conv8"
+  name: "conv8-4"
   type: "Convolution"
   bottom: "conv7"
-  top: "conv8"
+  top: "conv8-4"
   # learning rate & decay multipliers for the filters
   param {
     lr_mult: 1
@@ -419,7 +419,7 @@ layer {
   }
   # learning rate & decay multipliers for the biases
   param {
-    lr_mult: 2
+    lr_mult: 1
     decay_mult: 0
   }
   convolution_param {
@@ -439,20 +439,20 @@ layer {
     }
   }
 }
-layer {
-  name: "relu8"
-  type: "ReLU"
-  bottom: "conv8"
-  top: "conv8"
+#layer {
+#  name: "relu8"
+#  type: "ReLU"
+#  bottom: "conv8"
+#  top: "conv8"
 #  relu_param {
 #    negative_slope: 0.1818
 #  }
-}
+#}
 #----------------- score ------------------
 layer {
   name: "pool"
   type: "Pooling"
-  bottom: "conv8"
+  bottom: "conv8-4"
   top: "q_values"
   pooling_param {
     pool: AVE
@@ -461,6 +461,12 @@ layer {
 }
 
 #----------------- OUTCOME ------------------
+#layer {
+#  name: "soft"
+#  type: "Softmax"
+#  bottom: "q_values1"
+#  top: "q_values"
+#}
 #layer {
 #  name: "accuracy"
 #  type: "Accuracy"
