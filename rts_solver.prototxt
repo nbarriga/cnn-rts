@@ -5,11 +5,11 @@ net: "train_rts.prototxt"
 
 # test_iter specifies how many forward passes the test should carry out.
 # batch_size * test_iter = number of test samples
-test_iter: 11
+test_iter: 30
 
 # do testing every <test_interval> iterations
 # test_initialization: false
-test_interval: 100
+test_interval: 500
 
 # base learning rate
 base_lr: 1e-4
@@ -25,7 +25,7 @@ lr_policy: "fixed"
 
 # B
 # display every <display> iterations
-display: 20
+display: 100
 
 # maximum number of iterations
 max_iter: 1000000
@@ -38,7 +38,7 @@ delta: 0.00000001
 
 # take a snapshot every so many 
 snapshot: 5000
-snapshot_prefix: "snapshots/128x128new-dropB"
+snapshot_prefix: "snapshots/8x8"
 # SOLVER TYPE
 type: "Adam"
 

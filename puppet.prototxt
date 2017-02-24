@@ -1,58 +1,56 @@
 #name: "RTSNet"
-#layer {
-#  name: "data"
-#  type: "Data"
-#  top: "data"
-#  top: "label"
-#  include {
-#    phase: TRAIN
-#  }
-#  data_param {
-#    source: "data/train128x128"
-#    #source: "data/train24x24"
-#    batch_size: 256
-#    backend: LMDB
-#    # prefetch: 20
-#  }
-#} 
-#layer {
-#  name: "data"
-#  type: "Data"
-#  top: "data"
-#  top: "label"
-#  include {
-#    phase: TEST
-#  }
-#  data_param {
-#    source: "data/test128x128"
-#    #source: "data/test24x24"
-#    batch_size: 256
-#    backend: LMDB
-#    # prefetch: 20
-#  }
-#}
- layer {
-    type: "HDF5Data"
-    top: "data" # same name as given in create_dataset!
-    top: "label"
-    hdf5_data_param {
-      source: "train_list.txt" # do not give the h5 files directly, but the list.
-      batch_size: 256
-      shuffle: true
-    }
-    include { phase:TRAIN }
+layer {
+  name: "data"
+  type: "Data"
+  top: "data"
+  top: "label"
+  include {
+    phase: TRAIN
   }
- layer {
-    type: "HDF5Data"
-    top: "data" # same name as given in create_dataset!
-    top: "label"
-    hdf5_data_param {
-      source: "test_list.txt" # do not give the h5 files directly, but the list.
-      batch_size: 256
-      shuffle: true
-    }
-    include { phase:TEST }
+  data_param {
+    #source: "/common/barriga/puppet-data/train128x128"
+    source: "train128x128"
+    batch_size: 256
+    backend: LMDB
   }
+} 
+layer {
+  name: "data"
+  type: "Data"
+  top: "data"
+  top: "label"
+  include {
+    phase: TEST
+  }
+  data_param {
+    #source: "/common/barriga/puppet-data/test128x128"
+    source: "test128x128"
+    batch_size: 256
+    backend: LMDB
+  }
+}
+# layer {
+#    type: "HDF5Data"
+#    top: "data" # same name as given in create_dataset!
+#    top: "label"
+#    hdf5_data_param {
+#      source: "train_list.txt" # do not give the h5 files directly, but the list.
+#      batch_size: 256
+#      shuffle: true
+#    }
+#    include { phase:TRAIN }
+#  }
+# layer {
+#    type: "HDF5Data"
+#    top: "data" # same name as given in create_dataset!
+#    top: "label"
+#    hdf5_data_param {
+#      source: "test_list.txt" # do not give the h5 files directly, but the list.
+#      batch_size: 256
+#      shuffle: true
+#    }
+#    include { phase:TEST }
+#  }
 #----------------- conv 1 ------------------
 layer {
   name: "conv1"
@@ -412,7 +410,7 @@ layer {
   }
   convolution_param {
     # One output per class. Or 1 for regression.
-    num_output: 2
+    num_output: 4
     kernel_size: 1
     pad: 1
     stride: 1
@@ -478,4 +476,17 @@ layer {
   bottom: "score"
   bottom: "label"
   top: "loss"
+}
+layer {
+  name: "accuracy2"
+  type: "Accuracy"
+  bottom: "score"
+  bottom: "label"
+  top: "accuracy2"
+  accuracy_param {
+    top_k: 2
+  }
+  # include {
+  #   phase: TEST
+  # }
 }

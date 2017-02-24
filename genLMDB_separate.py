@@ -211,7 +211,7 @@ print("Creating test DB")
 create_db(dtst, ltst, outDirectory, '/test', dimstr, meanD, 0, testGames, True, backend)
 dtst = []
 ltst = []
-print("LMDB done: %s seconds ---" % (time.time() - start_time))
+print("DB done: %s seconds ---" % (time.time() - start_time))
 
 #batch = 2000
 startGame = 0
@@ -242,11 +242,11 @@ if batch > 0:
         print("Shuffling done: %s seconds ---" % (time.time() - start_time))
 
 
-        print("Creating training LMDB")
+        print("Creating training DB")
         create_db(d2, l2, outDirectory, '/train', dimstr, meanD, i, batch, delete, backend)
         d2 = []
         l2 = []
-        print("LMDB done: %s seconds ---" % (time.time() - start_time))
+        print("DB done: %s seconds ---" % (time.time() - start_time))
         delete = False
         startGame+=batch
         i+=1
@@ -279,5 +279,5 @@ else:
     create_db(d2, l2, outDirectory, '/train', dimstr, meanD, 0, trainGames, True, backend)
     d2 = []
     l2 = []
-    print("LMDB done: %s seconds ---" % (time.time() - start_time))
+    print("DB done: %s seconds ---" % (time.time() - start_time))
 
