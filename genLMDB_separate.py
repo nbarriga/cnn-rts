@@ -32,7 +32,13 @@ def read_games(channels, dimension, nrGames, path, process_labels, startGame, da
 
         f = open(path+str(startGame+i),'r')
         f.seek(-40,2)
-        labels[i]=(float(f.readlines()[-1])+1)/2.0
+        if datatype == np.uint8:
+            labels[i] = int(f.readlines()[-1])
+        else:
+            labels[i] = float(f.readlines()[-1])
+
+        #convert [0, 1] to [-1, 1]
+        #labels[i]=(float(f.readlines()[-1])+1)/2.0
         #labels[i] = array[-1]
 
 #        if process_labels:
