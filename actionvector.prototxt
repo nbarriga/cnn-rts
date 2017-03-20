@@ -5,8 +5,7 @@
     python_param {
       module: "PythonDataLayer"
       layer: "PythonDataLayer"
-       #param_str: "{\'path\': \'/common/barriga/actionvector-data/128x128extracted/game\',\'batch_size\': 256,\'num_samples\': 2800640,\'channels\': 41,\'width\': 128,\'height\': 128,\'preload\':1}"
-       param_str: "{\'path\': \'/home/barriga/git-working/cnn-rts/128x128extracted/game\',\'batch_size\': 256,\'num_samples\': 2800640,\'channels\': 41,\'width\': 128,\'height\': 128,\'preload\':0,\'shuffle\':1}"
+       param_str: "{\'path\': \'/home/barriga/git-working/cnn-rts/128x128extracted/game\',\'batch_size\': 256,\'num_samples\': 2800640,\'channels\': 41,\'width\': 128,\'height\': 128,\'preload\':0,\'shuffle\':1,\'datatype\':float}"
     }
     include { phase:TRAIN }
   }
@@ -17,8 +16,7 @@
     python_param {
       module: "PythonDataLayer"
       layer: "PythonDataLayer"
-       #param_str: "{\'path\': \'/common/barriga/actionvector-data/128x128extractedTest/game\',\'batch_size\': 256,\'num_samples\': 289792,\'channels\': 41,\'width\': 128,\'height\': 128,\'preload\':1}"
-       param_str: "{\'path\': \'/home/barriga/git-working/cnn-rts/128x128extractedTest/game\',\'batch_size\': 256,\'num_samples\': 289792,\'channels\': 41,\'width\': 128,\'height\': 128,\'preload\':0,\'shuffle\':1}"
+       param_str: "{\'path\': \'/home/barriga/git-working/cnn-rts/128x128extractedTest/game\',\'batch_size\': 256,\'num_samples\': 289792,\'channels\': 41,\'width\': 128,\'height\': 128,\'preload\':0,\'shuffle\':1,\'datatype\':float}"
     }
     include { phase:TEST }
   }
@@ -405,17 +403,47 @@ layer {
     negative_slope: 0.1818
   }
 }
-#----------------- score ------------------
+#----------------- fc ------------------
 layer {
-  name: "pool"
-  type: "Pooling"
+  name: "fc"
+  type: "InnerProduct"
   bottom: "conv8"
   top: "score"
-  pooling_param {
-    pool: AVE
-    global_pooling: true
+  # learning rate & decay multipliers for the filters
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  # learning rate & decay multipliers for the biases
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  inner_product_param {
+    # One output per class. Or 1 for regression.
+    num_output: 1
+    weight_filler {
+      # type: "gaussian"
+      # std: 0.01
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
   }
 }
+#----------------- score ------------------
+#layer {
+#  name: "pool"
+#  type: "Pooling"
+#  bottom: "conv8"
+#  top: "score"
+#  pooling_param {
+#    pool: AVE
+#    global_pooling: true
+#  }
+#}
 
 #----------------- OUTCOME ------------------
 #layer {

@@ -14,13 +14,13 @@ echo "Starting to train RTSnet ..."
 #ln -s /common/barriga/puppet-data/10secs4samples/train128x128 train128x128
 #ln -s /common/barriga/puppet-data/10secs4samples/test128x128 test128x128
 sed "\
-	s/net:.*/net: \"puppet.prototxt\"/g;\
+	s/net:.*/net: \"actionvector.prototxt\"/g;\
 	s/base_lr:.*/base_lr: 1e-4/g;\
-	s/test_iter:.*/test_iter: 5/g;\
+	s/test_iter:.*/test_iter: 10/g;\
 	s/test_interval:.*/test_interval: 100/g;\
 	s/display:.*/display: 20/g;\
 	s/max_iter:.*/max_iter: 100000/g;\
 	s/snapshot:.*/snapshot: 5000/g;\
-	s/snapshot_prefix:.*/snapshot_prefix: \"snapshots\/puppet128-fc\"/g;\
-	" rts_solver.prototxt >rts_solver.prototxt.puppet.tmp
-~/git-working/caffe/build/tools/caffe train --gpu 0 --solver rts_solver.prototxt.puppet.tmp 2>&1 | tee logs/puppet128-fc.log | grep --color -E 'Test\ .*$|$'
+	s/snapshot_prefix:.*/snapshot_prefix: \"snapshots\/actionvectorSmall\"/g;\
+	" rts_solver.prototxt >rts_solver.prototxt.action.tmp
+~/git-working/caffe/build/tools/caffe train --gpu 0 --solver rts_solver.prototxt.action.tmp 2>&1 | tee logs/actionVectorSmall.log | grep --color -E 'Test\ .*$|$'

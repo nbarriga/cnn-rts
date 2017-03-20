@@ -1,78 +1,27 @@
-# layer {
-#    type: "Python"
-#    top: "data" # same name as given in create_dataset!
-#    top: "label"
-#    python_param {
-#      module: "PythonDataLayer"
-#      layer: "PythonDataLayer"
-#       param_str: "{\'path\': \'/common/barriga/puppet-data/24x24extracted10secs4samples/game\',\'batch_size\': 256,\'num_samples\': 48128,\'channels\': 26,\'width\': 24,\'height\': 24,\'preload\':1,\'shuffle\':1,\'datatype\':int}"
-#    }
-#    include { phase:TRAIN }
-#  }
-# layer {
-#    type: "Python"
-#    top: "data" # same name as given in create_dataset!
-#    top: "label"
-#    python_param {
-#      module: "PythonDataLayer"
-#      layer: "PythonDataLayer"
-#       param_str: "{\'path\': \'/common/barriga/puppet-data/24x24extracted10secs4samplesTest/game\',\'batch_size\': 256,\'num_samples\': 5120,\'channels\': 26,\'width\': 24,\'height\': 24,\'preload\':1,\'shuffle\':1,\'datatype\':int}"
-#    }
-#    include { phase:TEST }
-#  }
-#name: "RTSNet"
-layer {
-  name: "data"
-  type: "Data"
-  top: "data"
-  top: "label"
-  include {
-    phase: TRAIN
+ layer {
+    type: "Python"
+    top: "data" 
+    top: "data2" 
+    top: "label"
+    python_param {
+      module: "PythonDataLayerAlt"
+      layer: "PythonDataLayer"
+       param_str: "{\'path\': \'/home/barriga/git-working/cnn-rts/128x128extracted/game\',\'batch_size\': 256,\'num_samples\': 2800640,\'channels\': 25,\'width\': 128,\'height\': 128,\'preload\':0,\'shuffle\':1,\'datatype\':float}"
+    }
+    include { phase:TRAIN }
   }
-  data_param {
-    #source: "/common/barriga/puppet-data/train128x128"
-    source: "train128x128"
-    batch_size: 256
-    backend: LMDB
+ layer {
+    type: "Python"
+    top: "data" 
+    top: "data2" 
+    top: "label"
+    python_param {
+      module: "PythonDataLayerAlt"
+      layer: "PythonDataLayer"
+       param_str: "{\'path\': \'/home/barriga/git-working/cnn-rts/128x128extractedTest/game\',\'batch_size\': 256,\'num_samples\': 289792,\'channels\': 25,\'width\': 128,\'height\': 128,\'preload\':0,\'shuffle\':1,\'datatype\':float}"
+    }
+    include { phase:TEST }
   }
-} 
-layer {
-  name: "data"
-  type: "Data"
-  top: "data"
-  top: "label"
-  include {
-    phase: TEST
-  }
-  data_param {
-    #source: "/common/barriga/puppet-data/test128x128"
-    source: "test128x128"
-    batch_size: 256
-    backend: LMDB
-  }
-}
-# layer {
-#    type: "HDF5Data"
-#    top: "data" # same name as given in create_dataset!
-#    top: "label"
-#    hdf5_data_param {
-#      source: "train_list.txt" # do not give the h5 files directly, but the list.
-#      batch_size: 256
-#      shuffle: true
-#    }
-#    include { phase:TRAIN }
-#  }
-# layer {
-#    type: "HDF5Data"
-#    top: "data" # same name as given in create_dataset!
-#    top: "label"
-#    hdf5_data_param {
-#      source: "test_list.txt" # do not give the h5 files directly, but the list.
-#      batch_size: 256
-#      shuffle: true
-#    }
-#    include { phase:TEST }
-#  }
 #----------------- conv 1 ------------------
 layer {
   name: "conv1"
@@ -290,7 +239,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 64 
+    num_output: 64
     kernel_size: 2
     pad: 1
     stride: 1
@@ -340,7 +289,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 64 
+    num_output: 64
     kernel_size: 3
     pad: 0
     stride: 2
@@ -390,7 +339,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 64 
+    num_output: 64
     kernel_size: 1
     pad: 1
     stride: 1
@@ -414,11 +363,30 @@ layer {
     negative_slope: 0.1818
   }
 }
+#layer {
+#  name: "drop7"
+#  type: "Dropout"
+#  bottom: "conv7"
+#  top: "conv7"
+#  dropout_param {
+#    dropout_ratio: 0.2
+#  }
+#}
+layer {
+  name: "concat"
+  bottom: "conv7"
+  bottom: "data2"
+  top: "concat"
+  type: "Concat"
+  concat_param {
+    axis: 1
+  }
+}
 #----------------- conv 8 ------------------
 layer {
   name: "conv8"
   type: "Convolution"
-  bottom: "conv7"
+  bottom: "concat"
   top: "conv8"
   # learning rate & decay multipliers for the filters
   param {
@@ -432,7 +400,7 @@ layer {
   }
   convolution_param {
     # One output per class. Or 1 for regression.
-    num_output: 4
+    num_output: 1
     kernel_size: 1
     pad: 1
     stride: 1
@@ -456,90 +424,107 @@ layer {
     negative_slope: 0.1818
   }
 }
-
-#----------------- fc ------------------
 #layer {
-#  name: "fc"
-#  type: "InnerProduct"
+#  name: "drop8"
+#  type: "Dropout"
 #  bottom: "conv8"
+#  top: "conv8"
+#  dropout_param {
+#    dropout_ratio: 0.2
+#  }
+#}
+#----------------- fc ------------------
+layer {
+  name: "fc"
+  type: "InnerProduct"
+  bottom: "conv8"
+  top: "score"
+  # learning rate & decay multipliers for the filters
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  # learning rate & decay multipliers for the biases
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  inner_product_param {
+    # One output per class. Or 1 for regression.
+    num_output: 1
+    weight_filler {
+      # type: "gaussian"
+      # std: 0.01
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+#layer {
+#  name: "fc-drop"
+#  type: "Dropout"
+#  bottom: "score"
 #  top: "score"
-#  # learning rate & decay multipliers for the filters
-#  param {
-#    lr_mult: 1
-#    decay_mult: 1
-#  }
-#  # learning rate & decay multipliers for the biases
-#  param {
-#    lr_mult: 2
-#    decay_mult: 0
-#  }
-#  inner_product_param {
-#    # One output per class. Or 1 for regression.
-#    num_output: 4
-#    weight_filler {
-#      # type: "gaussian"
-#      # std: 0.01
-#      type: "xavier"
-#    }
-#    bias_filler {
-#      type: "constant"
-#      value: 0
-#    }
+#  dropout_param {
+#    dropout_ratio: 0.3
 #  }
 #}
 #----------------- score ------------------
-layer {
- name: "pool"
- type: "Pooling"
- bottom: "conv8"
- top: "score"
- pooling_param {
-   pool: AVE
-   global_pooling: true
- }
-
+#layer {
+#  name: "pool"
+#  type: "Pooling"
+#  bottom: "conv8"
+#  top: "score"
+#  pooling_param {
+#    pool: AVE
+#    global_pooling: true
+#  }
+#}
 
 #----------------- OUTCOME ------------------
-layer {
-  name: "accuracy"
-  type: "Accuracy"
-  bottom: "score"
-  bottom: "label"
-  top: "accuracy"
-  accuracy_param {
-    top_k: 1
-  }
-  # include {
-  #   phase: TEST
-  # }
-}
+#layer {
+#  name: "accuracy"
+#  type: "Accuracy"
+#  bottom: "score"
+#  bottom: "label"
+#  top: "accuracy"
+#  accuracy_param {
+#    top_k: 1
+#  }
+#  # include {
+#  #   phase: TEST
+#  # }
+#}
 # For regression
-# layer {
-#   name: "loss"
-#   type: "EuclideanLoss"
-#   bottom: "score"
-#   bottom: "label"
-#   top: "loss"
-# }
+ layer {
+   name: "loss"
+   type: "EuclideanLoss"
+   bottom: "score"
+   bottom: "label"
+   top: "loss"
+ }
 
-# For classification.
-layer {
-  name: "loss"
-  type: "SoftmaxWithLoss"
-  bottom: "score"
-  bottom: "label"
-  top: "loss"
-}
-layer {
-  name: "accuracy2"
-  type: "Accuracy"
-  bottom: "score"
-  bottom: "label"
-  top: "accuracy2"
-  accuracy_param {
-    top_k: 2
-  }
-  # include {
-  #   phase: TEST
-  # }
-}
+## For classification.
+#layer {
+#  name: "loss"
+#  type: "SoftmaxWithLoss"
+#  bottom: "score"
+#  bottom: "label"
+#  top: "loss"
+#}
+#layer {
+#  name: "accuracy2"
+#  type: "Accuracy"
+#  bottom: "score"
+#  bottom: "label"
+#  top: "accuracy2"
+#  accuracy_param {
+#    top_k: 2
+#  }
+#  # include {
+#  #   phase: TEST
+#  # }
+#}
