@@ -22,6 +22,14 @@ class PythonDataLayer(caffe.Layer):
     self.size=self.planes*self.width*self.height
     self.preload=params['preload']
     self.shuffle=params['shuffle']
+    self.datatype=params['datatype']
+    
+    if self.datatype == int:
+        self.dtype=np.uint8
+    elif self.datatype == float:
+        self.dtype=np.float32
+    else:
+        raise Exception('Label datatype must be int or float: '+str(self.datatype))
 
     if self.num_samples % self.batch_size != 0:
          raise Exception('number of samples must be a multiple of batch size')
@@ -45,14 +53,11 @@ class PythonDataLayer(caffe.Layer):
         f = open(self.path+str(i),'r')
         lines=f.readlines()
         self.alllines.append(lines)
-      if self.shuffle == 1:
-        p = np.random.permutation(self.num_samples)
-        self.alllines = self.alllines[p]
+
+    if self.shuffle == 1:
+      self.games = np.random.permutation(self.num_samples)
     else:
-      if self.shuffle == 1:
-        self.games = np.random.permutation(self.num_samples)
-      else:
-        self.games = range(0,self.num_samples)
+      self.games = range(0,self.num_samples)
 
   def reshape(self,bottom,top):
     #constant data size
@@ -61,10 +66,10 @@ class PythonDataLayer(caffe.Layer):
   def forward(self,bottom,top): 
     # do your magic here... feed **one** batch to `top`
     data = np.zeros((self.batch_size,self.planes,self.width,self.height))
-    labels = np.zeros((self.batch_size,1))
+    labels = np.zeros((self.batch_size,1),self.dtype)
     for i in range(0,self.batch_size):
       if self.preload==1:
-        lines=self.alllines[self.nextGame+i]
+        lines=self.alllines[self.games[self.nextGame+i]]
       else:
         f = open(self.path+str(self.games[self.nextGame+i]),'r')
         lines=f.readlines()
@@ -80,7 +85,7 @@ class PythonDataLayer(caffe.Layer):
       for index in one_hots:
           data[i,index]=1
 
-      labels[i] = float(lines[2])
+      labels[i] = self.dtype(lines[2])
 
     self.nextGame=(self.nextGame+self.batch_size)%self.num_samples
 
@@ -90,4 +95,3 @@ class PythonDataLayer(caffe.Layer):
   def backward(self, top, propagate_down, bottom):
     # no back-prop for input layers
     pass
-
