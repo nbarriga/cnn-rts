@@ -23,7 +23,8 @@ class PythonDataLayer(caffe.Layer):
     self.preload=params['preload']
     self.shuffle=params['shuffle']
     self.datatype=params['datatype']
-    
+    self.rotation=params['rotate']
+
     if self.datatype == int:
         self.dtype=np.uint8
     elif self.datatype == float:
@@ -54,9 +55,6 @@ class PythonDataLayer(caffe.Layer):
         lines=f.readlines()
         self.alllines.append(lines)
 
-    if self.shuffle == 1:
-      self.games = np.random.permutation(self.num_samples)
-    else:
       self.games = range(0,self.num_samples)
 
   def reshape(self,bottom,top):
@@ -65,6 +63,9 @@ class PythonDataLayer(caffe.Layer):
 
   def forward(self,bottom,top): 
     # do your magic here... feed **one** batch to `top`
+    if self.nextGame == 0 and self.shuffle == 1:
+      self.games = np.random.permutation(self.num_samples)
+
     data = np.zeros((self.batch_size,self.planes,self.width,self.height))
     labels = np.zeros((self.batch_size,1),self.dtype)
     for i in range(0,self.batch_size):
@@ -85,6 +86,8 @@ class PythonDataLayer(caffe.Layer):
       for index in one_hots:
           data[i,index]=1
 
+      if self.rotation == 1:
+        data[i] = self.rotate(data[i],np.random.randint(0,8))
       labels[i] = self.dtype(lines[2])
 
     self.nextGame=(self.nextGame+self.batch_size)%self.num_samples
@@ -95,3 +98,28 @@ class PythonDataLayer(caffe.Layer):
   def backward(self, top, propagate_down, bottom):
     # no back-prop for input layers
     pass
+
+  def rotate(self, data, r):
+    for i in xrange(data.shape[0]):
+      if r==0:
+        pass
+      elif r==1:
+        data[i] = np.rot90(data[i])
+      elif r==2:
+        data[i] = np.rot90(data[i], 2)
+      elif r==3:
+        data[i] = np.rot90(data[i], 3)
+      elif r==4:
+        data[i] = np.flipud(data[i])
+      elif r==5:
+        data[i] = np.rot90(data[i])
+        data[i] = np.fliplr(data[i])
+      elif r==6:
+        data[i] = np.rot90(data[i], 2)
+        data[i] = np.flipud(data[i])
+      elif r==7:
+        data[i] = np.rot90(data[i], 3)
+        data[i] = np.fliplr(data[i])
+      else:
+        raise Exception('Wrong rotation')
+    return data

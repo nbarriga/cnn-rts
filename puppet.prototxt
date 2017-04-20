@@ -1,56 +1,56 @@
-# layer {
-#    type: "Python"
-#    top: "data" # same name as given in create_dataset!
-#    top: "label"
-#    python_param {
-#      module: "PythonDataLayer"
-#      layer: "PythonDataLayer"
-#       param_str: "{\'path\': \'/common/barriga/puppet-data/24x24extracted10secs4samples/game\',\'batch_size\': 256,\'num_samples\': 48128,\'channels\': 26,\'width\': 24,\'height\': 24,\'preload\':1,\'shuffle\':1,\'datatype\':int}"
-#    }
-#    include { phase:TRAIN }
-#  }
-# layer {
-#    type: "Python"
-#    top: "data" # same name as given in create_dataset!
-#    top: "label"
-#    python_param {
-#      module: "PythonDataLayer"
-#      layer: "PythonDataLayer"
-#       param_str: "{\'path\': \'/common/barriga/puppet-data/24x24extracted10secs4samplesTest/game\',\'batch_size\': 256,\'num_samples\': 5120,\'channels\': 26,\'width\': 24,\'height\': 24,\'preload\':1,\'shuffle\':1,\'datatype\':int}"
-#    }
-#    include { phase:TEST }
-#  }
+ layer {
+    type: "Python"
+    top: "data"
+    top: "label"
+    python_param {
+      module: "PythonDataLayer"
+      layer: "PythonDataLayer"
+       param_str: "{\'path\': \'train128puppet/game\',\'batch_size\': 256,\'num_samples\': 21760,\'channels\': 26,\'width\': 128,\'height\': 128,\'preload\':1,\'shuffle\':1,\'datatype\':int, \'rotate\': 1}"
+    }
+    include { phase:TRAIN }
+  }
+ layer {
+    type: "Python"
+    top: "data" 
+    top: "label"
+    python_param {
+      module: "PythonDataLayer"
+      layer: "PythonDataLayer"
+       param_str: "{\'path\': \'test128puppet/game\',\'batch_size\': 256,\'num_samples\': 2304,\'channels\': 26,\'width\': 128,\'height\': 128,\'preload\':1,\'shuffle\':1,\'datatype\':int, \'rotate\': 0}"
+    }
+    include { phase:TEST }
+  }
 #name: "RTSNet"
-layer {
-  name: "data"
-  type: "Data"
-  top: "data"
-  top: "label"
-  include {
-    phase: TRAIN
-  }
-  data_param {
-    #source: "/common/barriga/puppet-data/train128x128"
-    source: "train128x128"
-    batch_size: 256
-    backend: LMDB
-  }
-} 
-layer {
-  name: "data"
-  type: "Data"
-  top: "data"
-  top: "label"
-  include {
-    phase: TEST
-  }
-  data_param {
-    #source: "/common/barriga/puppet-data/test128x128"
-    source: "test128x128"
-    batch_size: 256
-    backend: LMDB
-  }
-}
+#layer {
+#  name: "data"
+#  type: "Data"
+#  top: "data"
+#  top: "label"
+#  include {
+#    phase: TRAIN
+#  }
+#  data_param {
+#    #source: "/common/barriga/puppet-data/train128x128"
+#    source: "train128x128"
+#    batch_size: 256
+#    backend: LMDB
+#  }
+#} 
+#layer {
+#  name: "data"
+#  type: "Data"
+#  top: "data"
+#  top: "label"
+#  include {
+#    phase: TEST
+#  }
+#  data_param {
+#    #source: "/common/barriga/puppet-data/test128x128"
+#    source: "test128x128"
+#    batch_size: 256
+#    backend: LMDB
+#  }
+#}
 # layer {
 #    type: "HDF5Data"
 #    top: "data" # same name as given in create_dataset!
@@ -497,7 +497,7 @@ layer {
    pool: AVE
    global_pooling: true
  }
-
+}
 
 #----------------- OUTCOME ------------------
 layer {
