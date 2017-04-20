@@ -2,69 +2,10 @@ layer {
   name: "input"
   type: "Input"
   top: "data"
-  top: "reward"
-  top: "filter"
   input_param { 
-	shape { dim: 256 dim: 26 dim: 128 dim: 128 } 
-  	shape { dim: 256 dim: 4 dim: 1 dim: 1 } 
-  	shape { dim: 256 dim: 4 dim: 1 dim: 1 } 
+	shape { dim: 1 dim: 26 dim: 128 dim: 128 } 
   }
 }
-#layer {
-#  name: "echofilter"
-#  type: "Split"
-#  bottom: "filter"
-#  top: "filter2"
-#}
-#layer {
-#  name: "echoreward"
-#  type: "Split"
-#  bottom: "reward"
-#  top: "reward2"
-#}
-#layer {
-#  name: "state"
-#  type: "MemoryData"
-#  top: "data"
-#  top: "dummy1"
-#  memory_data_param {
-#    batch_size: 32
-#    channels: 25
-#    height: 8
-#    width: 8
-#  }
-#}
-#layer {
-#  name: "reward"
-#  type: "MemoryData"
-#  top: "reward"
-#  top: "dummy2"
-#  memory_data_param {
-#    batch_size: 32
-#    channels: 4
-#    height: 1
-#    width: 1
-#  }
-#}
-#layer {
-#  name: "filter"
-#  type: "MemoryData"
-#  top: "filter"
-#  top: "dummy3"
-#  memory_data_param {
-#    batch_size: 32
-#    channels: 4
-#    height: 1
-#    width: 1
-#  }
-#}
-#layer {
-#  name: "silence_layer"
-#  type: "Silence"
-#  bottom: "dummy1"
-#  bottom: "dummy2"
-#  bottom: "dummy3"
-#}
 #----------------- conv 1 ------------------
 layer {
   name: "conv1"
@@ -439,15 +380,6 @@ layer {
     }
   }
 }
-#layer {
-#  name: "relu8"
-#  type: "ReLU"
-#  bottom: "conv8"
-#  top: "conv8"
-#  relu_param {
-#    negative_slope: 0.1818
-#  }
-#}
 #----------------- score ------------------
 layer {
   name: "pool"
@@ -461,55 +393,9 @@ layer {
 }
 
 #----------------- OUTCOME ------------------
-#layer {
-#  name: "soft"
-#  type: "Softmax"
-#  bottom: "q_values1"
-#  top: "q_values"
-#}
-#layer {
-#  name: "accuracy"
-#  type: "Accuracy"
-#  bottom: "score"
-#  bottom: "label"
-#  top: "accuracy"
-#  accuracy_param {
-#    top_k: 1
-#  }
-#  # include {
-#  #   phase: TEST
-#  # }
-#}
 layer {
-  name: "eltwise_layer"
-  type: "Eltwise"
+  name: "soft"
+  type: "Softmax"
   bottom: "q_values"
-  bottom: "filter"
-  top: "filtered_q_values"
-  eltwise_param {
-    operation: PROD
-  }
-   include {
-     phase: TRAIN
-   }
+  top: "prob"
 }
-# For regression
- layer {
-   name: "loss"
-   type: "EuclideanLoss"
-   bottom: "filtered_q_values"
-   bottom: "reward"
-   top: "loss"
-   include {
-     phase: TRAIN
-   }
- }
-
-# For classification.
-#layer {
-#  name: "loss"
-#  type: "SoftmaxWithLoss"
-#  bottom: "score"
-#  bottom: "label"
-#  top: "loss"
-#}
